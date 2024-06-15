@@ -18,6 +18,7 @@ namespace ColorImageFromArray
         private int height = 256;
         private int[] pixelData;
         private Bitmap? bitmap;
+        private CachedBitmap? cachedBitmap;
 
         private Stopwatch? stopwatch;
 
@@ -106,9 +107,9 @@ namespace ColorImageFromArray
             if (!isRunning) return;
 
             // ビットマップを表示
-            if (bitmap != null)
+            if (cachedBitmap != null)
             {
-                g.DrawImage(bitmap, 0, 0);
+                g.DrawCachedBitmap(cachedBitmap, 0, 0);
             }
         }
 
@@ -124,6 +125,11 @@ namespace ColorImageFromArray
             BitmapData? bmpData = bitmap.LockBits(rect, ImageLockMode.WriteOnly, bitmap.PixelFormat);
             Marshal.Copy(pixelData, 0, bmpData.Scan0, pixelData.Length);
             bitmap.UnlockBits(bmpData);
+            // CachedBitmapを更新
+            using (Graphics g = this.CreateGraphics())
+            {
+                cachedBitmap = new CachedBitmap(bitmap, g);
+            }
             bmpData = null;
             GC.Collect();
         }
