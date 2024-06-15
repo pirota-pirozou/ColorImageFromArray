@@ -10,6 +10,8 @@ using System.Threading.Tasks;
 using System.Runtime.InteropServices;
 using Debug = System.Diagnostics.Debug;
 
+
+
 namespace ColorImageFromArray
 {
     public partial class Form1 : Form
@@ -18,8 +20,9 @@ namespace ColorImageFromArray
         private int height = 256;
         private int[] pixelData;
         private Bitmap? bitmap;
+#if USE_CACHEDBITMAP
         private CachedBitmap? cachedBitmap;
-
+#endif
         private Stopwatch? stopwatch;
 
         // マルチスレッド駆動
@@ -107,10 +110,17 @@ namespace ColorImageFromArray
             if (!isRunning) return;
 
             // ビットマップを表示
+#if USE_CACHEDBITMAP
             if (cachedBitmap != null)
             {
                 g.DrawCachedBitmap(cachedBitmap, 0, 0);
             }
+#else
+            if (bitmap != null)
+            {
+                g.DrawImage(bitmap, 0, 0);
+            }
+#endif
         }
 
         /// <summary>
@@ -125,11 +135,13 @@ namespace ColorImageFromArray
             BitmapData? bmpData = bitmap.LockBits(rect, ImageLockMode.WriteOnly, bitmap.PixelFormat);
             Marshal.Copy(pixelData, 0, bmpData.Scan0, pixelData.Length);
             bitmap.UnlockBits(bmpData);
+#if USE_CACHEDBITMAP
             // CachedBitmapを更新
             using (Graphics g = this.CreateGraphics())
             {
                 cachedBitmap = new CachedBitmap(bitmap, g);
             }
+#endif
             bmpData = null;
             GC.Collect();
         }
@@ -158,10 +170,11 @@ namespace ColorImageFromArray
             cts?.Dispose();
             cts = null;
 
+#if USE_CACHEDBITMAP
             // cachedBitmap解放
             cachedBitmap?.Dispose();
             cachedBitmap = null;
-
+#endif
             // bitmap解放
             bitmap?.Dispose();
             bitmap = null;
