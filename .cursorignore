@@ -1,0 +1,11 @@
+.vs/
+bin/
+obj/
+Content/
+ContentPipeline/
+Publish/
+tools/
+*.user
+*.pfx
+*.bat
+*.ps1
