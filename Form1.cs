@@ -157,6 +157,15 @@ namespace ColorImageFromArray
             // アイドル状態イベント解除
             cts?.Dispose();
             cts = null;
+
+            // cachedBitmap解放
+            cachedBitmap?.Dispose();
+            cachedBitmap = null;
+
+            // bitmap解放
+            bitmap?.Dispose();
+            bitmap = null;
+
             GC.Collect();
         }
 
