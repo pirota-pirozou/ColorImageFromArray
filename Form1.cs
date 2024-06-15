@@ -82,7 +82,7 @@ namespace ColorImageFromArray
                         Debug.WriteLine("Task is cancelled.");
                         break;
                     }
-                    await Task.Delay(1);
+                    await Task.Delay(0);
                     // ここに 17ms ごとに実行したいコードを記述します
                     var ts = stopwatch?.Elapsed;
                     if (ts?.Milliseconds >= 17)
