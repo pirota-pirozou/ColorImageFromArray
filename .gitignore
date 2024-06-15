@@ -21,7 +21,6 @@ obj/
 *.user
 *.unityproj
 *.booproj
-*.code-workspace
 
 # OS generated
 .DS_Store
