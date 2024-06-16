@@ -44,35 +44,43 @@ namespace ColorImageFromArray
             pixelData = new int[width * height];
         }
 
+        private Size CalculateFormSize(Size clientSize)
+        {
+            // 一時的なフォームを作成して枠のサイズを取得する
+            using (Form tempForm = new Form())
+            {
+                tempForm.FormBorderStyle = this.FormBorderStyle;
+                tempForm.WindowState = this.WindowState;
+
+                // 現在の枠のサイズを取得する
+                Size borderSize = new Size(
+                    tempForm.Width - tempForm.ClientSize.Width,
+                    tempForm.Height - tempForm.ClientSize.Height
+                );
+
+                // クライアントサイズに枠のサイズを加える
+                return new Size(
+                    clientSize.Width + borderSize.Width,
+                    clientSize.Height + borderSize.Height
+                );
+            }
+        }
+
         /// <summary>
         /// フォームがロードされたとき
         /// </summary>
         private void Form1_Load(object sender, EventArgs e)
         {
             // ボーダーサイズを考慮してクライアントサイズを設定
-            // フォームまたはウィンドウの Rectangle を取得します
-            /*
-                        // Win32 APIを直読み！あまり良くないかも
-                        Rectangle windowRect = new Rectangle();
-                        GetWindowRect(Handle, ref windowRect);
+            // クライアント領域のサイズを設定する（例：640x480）
+            Size desiredClientSize = new Size(640, 480);
 
-                        Rectangle clientRect = new Rectangle();
-                        GetClientRect(Handle, ref clientRect);
+            // フォームの全体サイズを計算する
+            Size formSize = CalculateFormSize(desiredClientSize);
 
-                        int borderWidth = (windowRect.Width - clientRect.Width) / 2;
-                        int borderHeight = (windowRect.Height - clientRect.Height) / 2;
-                        int totalWidth = 640 + borderWidth;
-                        int totalHeight = 480 + borderHeight;
-             */
-/*
-            Size borderSize = SystemInformation.FrameBorderSize;
-            int borderWidth = borderSize.Width;
-            int borderHeight = borderSize.Height;
-            Debug.WriteLine("BorderWidth " + borderWidth + " BorderHeight " + borderHeight);
- */
-            int totalWidth = 640;
-            int totalHeight = 480;
-            ClientSize = new Size(totalWidth, totalHeight);
+            // フォームのサイズを設定する
+            this.MaximumSize = this.MinimumSize = formSize;
+            this.Size = formSize;
 
             // ビットマップを作成し、数値配列をコピー
             bitmap = new Bitmap(width, height, PixelFormat.Format32bppArgb);
