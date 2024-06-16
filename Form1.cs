@@ -10,14 +10,18 @@ using System.Threading.Tasks;
 using System.Runtime.InteropServices;
 using Debug = System.Diagnostics.Debug;
 
-
-
 namespace ColorImageFromArray
 {
+
     public partial class Form1 : Form
     {
-        private int width = 256;
-        private int height = 256;
+        [DllImport("user32.dll")]
+        static extern bool GetWindowRect(IntPtr hWnd, ref Rectangle lpRect);
+        [DllImport("user32.dll")]
+        static extern bool GetClientRect(IntPtr hWnd, ref Rectangle lpRect);
+
+        private int width = 640;
+        private int height = 480;
         private int[] pixelData;
         private Bitmap? bitmap;
 #if USE_CACHEDBITMAP
@@ -31,6 +35,8 @@ namespace ColorImageFromArray
 
         private bool isRunning = false;
 
+        private Random random = new Random();
+
         public Form1()
         {
             InitializeComponent();
@@ -43,17 +49,30 @@ namespace ColorImageFromArray
         /// </summary>
         private void Form1_Load(object sender, EventArgs e)
         {
-            // 数値配列にRGBデータを設定（例: カラーグラデーション）
-            for (int y = 0; y < height; y++)
-            {
-                for (int x = 0; x < width; x++)
-                {
-                    int r = 255 * x / width;
-                    int g = 255 * y / height;
-                    int b = 255 * (x + y) / (width + height);
-                    pixelData[y * width + x] = (255 << 24) | (r << 16) | (g << 8) | b;
-                }
-            }
+            // ボーダーサイズを考慮してクライアントサイズを設定
+            // フォームまたはウィンドウの Rectangle を取得します
+            /*
+                        // Win32 APIを直読み！あまり良くないかも
+                        Rectangle windowRect = new Rectangle();
+                        GetWindowRect(Handle, ref windowRect);
+
+                        Rectangle clientRect = new Rectangle();
+                        GetClientRect(Handle, ref clientRect);
+
+                        int borderWidth = (windowRect.Width - clientRect.Width) / 2;
+                        int borderHeight = (windowRect.Height - clientRect.Height) / 2;
+                        int totalWidth = 640 + borderWidth;
+                        int totalHeight = 480 + borderHeight;
+             */
+/*
+            Size borderSize = SystemInformation.FrameBorderSize;
+            int borderWidth = borderSize.Width;
+            int borderHeight = borderSize.Height;
+            Debug.WriteLine("BorderWidth " + borderWidth + " BorderHeight " + borderHeight);
+ */
+            int totalWidth = 640;
+            int totalHeight = 480;
+            ClientSize = new Size(totalWidth, totalHeight);
 
             // ビットマップを作成し、数値配列をコピー
             bitmap = new Bitmap(width, height, PixelFormat.Format32bppArgb);
@@ -90,9 +109,10 @@ namespace ColorImageFromArray
                     var ts = stopwatch?.Elapsed;
                     if (ts?.Milliseconds >= 17)
                     {
-                        Debug.WriteLine("RunningLoop " + ts?.Milliseconds);
+                        float delta_t = (float)ts?.Milliseconds / 17.0f;
+                        Debug.WriteLine("RunningLoop " + ts?.Milliseconds + " delta_t " + delta_t);
                         stopwatch?.Restart();
-                        UpdateFrame(); // フレーム更新
+                        UpdateFrame(delta_t); // フレーム更新
                         this.Invalidate(); // 再描画
                     }
                 }
@@ -126,11 +146,21 @@ namespace ColorImageFromArray
         /// <summary>
         /// フレーム更新処理
         /// </summary>
-        private void UpdateFrame()
+        /// <param name="delta_t">Δｔ(1.0=通常）</param>
+        private void UpdateFrame(float delta_t)
         {
             if (bitmap == null) return;
 
-            // 数値配列にRGBデータを設定（例: カラーグラデーション）
+            // 数値配列にRGBデータを設定（ランダム）
+            for (int y = 0; y < height; y++)
+            {
+                for (int x = 0; x < width; x++)
+                {
+                    // pixelData[y * width + x] = (255 << 24) | (r << 16) | (g << 8) | b;
+                    int pixel = random.Next();
+                    pixelData[y * width + x] = (255 << 24) | pixel;
+                }
+            }
             Rectangle rect = new Rectangle(0, 0, width, height);
             BitmapData? bmpData = bitmap.LockBits(rect, ImageLockMode.WriteOnly, bitmap.PixelFormat);
             Marshal.Copy(pixelData, 0, bmpData.Scan0, pixelData.Length);
